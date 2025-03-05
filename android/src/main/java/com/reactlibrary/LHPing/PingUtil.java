@@ -338,4 +338,23 @@ public class PingUtil {
         return command;
     }
 
+    private static String createSimpleTraceRouteCommand(String domain) {
+        return "/system/bin/traceroute " + domain;
+    } 
+
+    public static String getTraceRouteList(String url, int timeout) {
+        String domain = getDomain(url);
+        if (null == domain) {
+            return null;
+        }
+        String tracerouteString = ping(createSimpleTraceRouteCommand(domain), timeout);
+        if (null != tracerouteString) {
+            try {
+                return tracerouteString;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
 }

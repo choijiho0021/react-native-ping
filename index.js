@@ -1,11 +1,11 @@
-import { NativeModules } from 'react-native';
+import { NativeModules } from "react-native";
 
 const { RNReactNativePing } = NativeModules;
 class Ping {
   /**
    *
    * Get RTT (Round-trip delay time)
-   * 
+   *
    * @static
    * @param {string} ipAddress - For example : 8.8.8.8
    * @param {Object} option - Some optional operations
@@ -15,6 +15,10 @@ class Ping {
    */
   static async start(ipAddress, option) {
     const result = await RNReactNativePing.start(ipAddress, option);
+    return result;
+  }
+  static async startTraceroute(ipAddress, option) {
+    const result = await RNReactNativePing.startTraceroute(ipAddress, option);
     return result;
   }
   static async getTrafficStats() {

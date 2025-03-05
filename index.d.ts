@@ -15,14 +15,22 @@ type TrafficStats = {
 export default class Ping {
   /**
    * Ping a specified server and return the RTT (Round-trip time) in ms
-   * 
+   *
    * @param ipAddress IP Address of the server to ping (eg: 8.8.8.8)
    * @param options   Optional parameters
    */
-  static start(
+  static start(ipAddress: string, options?: PingOptions): Promise<number>;
+
+  /**
+   * Traceroute
+   *
+   * @param ipAddress IP Address of the server to ping (eg: 8.8.8.8)
+   * @param options   Optional parameters
+   */
+  static startTraceroute(
     ipAddress: string,
-    options?: PingOptions,
-  ): Promise<number>;
+    options?: PingOptions
+  ): Promise<string>;
 
   static getTrafficStats(): Promise<TrafficStats>;
 }

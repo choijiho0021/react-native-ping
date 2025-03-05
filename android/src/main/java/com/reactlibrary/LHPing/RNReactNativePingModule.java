@@ -76,6 +76,58 @@ public class RNReactNativePingModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void startTraceroute(final String ipAddress, ReadableMap option, final Promise promise) {
+        if (ipAddress == null || ipAddress.length() == 0) {
+            LHDefinition.PING_ERROR_CODE error = LHDefinition.PING_ERROR_CODE.HostErrorNotSetHost;
+            promise.reject(error.getCode(), error.getMessage());
+            return;
+        }
+    
+        final boolean[] isFinish = {false};
+        int timeout = 10000;
+        if (option.hasKey(TIMEOUT_KEY)) {
+            timeout = option.getInt(TIMEOUT_KEY);
+        }
+        final int finalTimeout = timeout;
+    
+        Handler mHandler = new Handler(handlerThread.getLooper());
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (isFinish[0]) {
+                        return; // Prevent multiple calls
+                    }
+                    // 트레이서트레이스 명령어 실행
+                    String tracerouteResult = PingUtil.getTraceRouteList(ipAddress, finalTimeout);
+                    promise.resolve(tracerouteResult); // 트레이서트레이스 결과를 반환
+                    isFinish[0] = true;
+                } catch (Exception e) {
+                    if (isFinish[0]) {
+                        return; // Prevent multiple calls
+                    }
+                    LHDefinition.PING_ERROR_CODE error =
+                            LHDefinition.PING_ERROR_CODE.HostErrorUnknown;
+                    promise.reject(error.getCode(), error.getMessage());
+                    isFinish[0] = true;
+                }
+            }
+        });
+    
+        mHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (isFinish[0]) {
+                    return; // Prevent multiple calls
+                }
+                LHDefinition.PING_ERROR_CODE error = LHDefinition.PING_ERROR_CODE.Timeout;
+                promise.reject(error.getCode(), error.getMessage()); // 타임아웃 발생 시 에러를 JavaScript로 반환
+                isFinish[0] = true;
+            }
+        }, timeout);
+    }
+
+    @ReactMethod
     public void getTrafficStats(final Promise promise) {
         final long receiveTotal = TrafficStats.getTotalRxBytes();
         final long sendTotal = TrafficStats.getTotalTxBytes();
