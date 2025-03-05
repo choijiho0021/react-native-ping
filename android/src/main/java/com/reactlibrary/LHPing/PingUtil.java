@@ -272,17 +272,15 @@ public class PingUtil {
         Process process = null;
         try {
             process = Runtime.getRuntime().exec(command);
-            InputStream is = process.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while (reader.ready() && null != (line = reader.readLine())) {
-                sb.append(line);
-                sb.append("\n");
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line).append("\n");
             }
-            reader.close();
-            is.close();
+
             return sb.toString();
+         }
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -296,37 +294,34 @@ public class PingUtil {
     private static String ping(String command, int timeout) {
         Process process = null;
         long startTime = System.currentTimeMillis();
+    
         try {
             process = Runtime.getRuntime().exec(command);
-            InputStream is = process.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            StringBuilder sb = new StringBuilder();
-            String line;
-            boolean isBreak = false;
-            while (true) {
-                long currentTime = System.currentTimeMillis();
-                if (isBreak || (currentTime - startTime > timeout)) {
-                    break;
-                }
-                if (reader.ready()) {
-                    while (null != (line = reader.readLine())) {
-                        sb.append(line);
-                        sb.append("\n");
+    
+            // Try-with-resources block to ensure proper resource management
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                StringBuilder sb = new StringBuilder();
+                String line;
+    
+                // Reading lines while within the timeout period
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line).append("\n");
+    
+                    long currentTime = System.currentTimeMillis();
+                    if (currentTime - startTime > timeout) {
+                        break; // Stop reading if the timeout is exceeded
                     }
-                    isBreak = true;
                 }
+    
+                return sb.toString();
             }
-            reader.close();
-            is.close();
-            return sb.toString();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            if (null != process) {
-                process.destroy();
+            if (process != null) {
+                process.destroy(); // Ensure the process is destroyed after use
             }
         }
-        return null;
     }
 
     private static String createSimplePingCommand(int count, int timeout, String domain) {
@@ -342,4 +337,5 @@ public class PingUtil {
         command = command.concat(" " + domain);
         return command;
     }
+
 }
